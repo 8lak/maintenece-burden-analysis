@@ -1,0 +1,18 @@
+# Python artifacts
+__pycache__/
+*.pyc
+.env
+venv/
+
+# Mac OS noise
+.DS_Store
+
+# Data (NEVER commit large datasets)
+data/
+!data/samples/  # Do allow sample data
+*.jsonl
+full_commit_with_author_data/
+batch_results_local/
+
+# Large CSVs
+FINAL_CSS_WITH_PREDICTION_TIMESERIES.csv
