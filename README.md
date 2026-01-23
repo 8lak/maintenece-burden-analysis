@@ -1,6 +1,3 @@
-### Repo: `maintenance-burden-analysis`
-
-```markdown
 # C vs. Rust: Quantitative Maintenance Burden Analysis
 
 > **Status:** Completed (Fall 2025)
@@ -15,8 +12,8 @@ A large-scale comparative analysis of **182,746 commits** across 25 years of ope
 ---
 
 ## 1. The Research Question
-**Context:** `libxml2` is the standard XML parser for the internet (Linux, Android, macOS). It is written in C and suffers from memory safety vulnerabilities.
-**The Question:** Does migrating to Rust actually reduce maintenance effort, or does it just shift the complexity elsewhere?
+**Context:** `libxml2` is the standard XML parser for the internet (Linux, Android, macOS). It is written in C and suffers from memory safety vulnerabilities.  
+**The Question:** Does migrating to Rust actually reduce maintenance effort, or does it just shift the complexity elsewhere?  
 **The Hypothesis:** 
 *   **C** pays a *Runtime Tax*: High frequency of simple fixes for dangerous bugs (Segfaults).
 *   **Rust** pays a *Compile-Time Tax*: High frequency of complex fixes to satisfy the compiler (Borrow Checker), but near-zero memory bugs.
@@ -98,4 +95,3 @@ $$ CCS = (0.5 \cdot CogLoad) + (0.25 \cdot \log(Entropy)) + (0.25 \cdot \log(Chu
 
 ## 6. Impact
 This research provides quantitative evidence supporting the strategic migration of critical infrastructure to memory-safe languages. It moves the debate from "Rust feels safer" to "Rust statistically eliminates the most expensive category of maintenance."
-```
