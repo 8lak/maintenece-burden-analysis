@@ -72,7 +72,7 @@ I fine-tuned **Gemini 2.0 Flash Lite** to classify commits into a custom taxonom
 
 ### Finding 2: The "Shift Left" Effect
 I developed a **Commit Complexity Score (CCS)** to quantify effort:
-$$ CCS = (0.5 \cdot CogLoad) + (0.25 \cdot \log(Entropy)) + (0.25 \cdot \log(Churn)) $$
+$$CCS = (0.5 \cdot CogLoad) + (0.25 \cdot \log(Entropy)) + (0.25 \cdot \log(Churn))$$
 
 *   **Interpretation:** Rust forces developers to resolve complexity upfront. C allows "simple" code to merge, but pays a massive "backend tax" in the maintenance phase.
 
