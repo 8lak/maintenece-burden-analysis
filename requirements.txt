@@ -1,0 +1,14 @@
+requests
+pandas
+networkx
+python-dotenv
+matplotlib
+seaborn
+GitPython
+seaborn
+tqdm
+scikit-learn
+google-generativeai
+google-cloud-aiplatform
+vertexai
+unidiff

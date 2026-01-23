@@ -1,25 +1,28 @@
 # C vs. Rust: Quantitative Maintenance Burden Analysis
 
 > **Status:** Completed (Fall 2025)
-> **Stack:** Python, Google Cloud Platform (Vertex AI, BigQuery), Gemini 2.0 Flash Lite
-> **Focus:** MLOps, Static Analysis, Cloud FinOps, Statistical Research
+| **Stack:** Python, C, Rust, Google Cloud Platform (Vertex AI, BigQuery), Gemini 2.0 Flash Lite
+| **Focus:** MLOps, Static Analysis, Cloud FinOps, Statistical Research
 
 ## TL;DR
-A large-scale comparative analysis of **182,746 commits** across 25 years of open-source history. This project quantifies the economic "maintenance burden" difference between C and Rust to inform critical infrastructure migration decisions (specifically regarding `libxml2`).
+A large-scale comparative analysis of **182,746 commits** across 25 years of open-source history. This project quantifies the economic "maintenance burden" difference between C and Rust to inform critical infrastructure migration decisions.
 
-**Key Result:** Demonstrated that C projects pay a **~15% "Memory Tax"** (maintenance effort spent fixing crashes), whereas functionally equivalent Rust projects spend that time on Feature Development.
+**Key Result:** Demonstrated a **3x reduction** in memory-safety maintenance events when using Rust, proving that the language successfully "Shifts Left" complexity from the maintenance phase to the development phase.
+
+![Normalized Distribution](docs/images/normalized_category_distribution_by_langauge.png)
+*Overview: Distribution of maintenance categories across C and Rust projects.*
 
 ---
 
 ## 1. The Research Question
-**Context:** `libxml2` is the standard XML parser for the internet (Linux, Android, macOS). It is written in C and suffers from memory safety vulnerabilities.  
-**The Question:** Does migrating to Rust actually reduce maintenance effort, or does it just shift the complexity elsewhere?  
+**Context:** This research was motivated by the real-world "maintainer crisis" in critical infrastructure, specifically regarding `libxml2`—a C-based XML parser used in billions of devices. The project aims to provide a data-driven answer to a strategic question: *Is it more efficient to source specialized C maintainers or migrate the codebase to Rust?*
+
 **The Hypothesis:** 
-*   **C** pays a *Runtime Tax*: High frequency of simple fixes for dangerous bugs (Segfaults).
-*   **Rust** pays a *Compile-Time Tax*: High frequency of complex fixes to satisfy the compiler (Borrow Checker), but near-zero memory bugs.
+*   **C** pays a *Runtime Tax*: High frequency of simple fixes for dangerous, unpredictable bugs (Segfaults).
+*   **Rust** pays a *Compile-Time Tax*: High frequency of complex fixes required to satisfy the compiler, resulting in near-zero runtime memory bugs.
 
 ## 2. Methodology: "Apples-to-Apples"
-To ensure scientific validity, I analyzed 5 matched pairs of libraries serving identical functions:
+To isolate programming language as the primary variable, I analyzed 5 matched pairs of libraries serving identical functions:
 
 | Domain | C Representative | Rust Representative |
 |:---|:---|:---|
@@ -33,65 +36,84 @@ To ensure scientific validity, I analyzed 5 matched pairs of libraries serving i
 
 ## 3. The Engineering Pipeline (MLOps)
 
-I engineered a custom ETL pipeline to classify human intent from code diffs, addressing key challenges in data quality and model reliability.
+I engineered a custom ETL pipeline to classify human intent from code diffs, addressing challenges in data quality and cloud scalability.
 
 ### A. The "Smart Truncation" Algorithm (The Accordion)
-Raw git diffs are noisy and token-expensive. I wrote a custom parser using `unidiff` that:
+Raw git diffs are token-expensive. I wrote a custom parser using `unidiff` that:
 1.  **Strips Artifacts:** Removes auto-generated files, assets, and lockfiles.
 2.  **Compresses Context:** Keeps the "Head" and "Tail" of function changes while truncating the repetitive middle.
-3.  **Result:** Reduced token usage by **60-90%**, preserving semantic context while fitting within the LLM context window.
+3.  **Result:** Reduced token usage by **60-90%**, preserving semantic context while maximizing throughput.
 
 ### B. The Classifier & Data Strategy
-I fine-tuned **Gemini 2.0 Flash Lite** to classify commits into a custom taxonomy. To achieve high accuracy on rare edge cases, I implemented two advanced strategies:
+I fine-tuned **Gemini 2.0 Flash Lite** to classify commits into a custom taxonomy. 
 
 *   **Synthetic Data Augmentation ("Booster Packs"):**
-    Real-world concurrency bugs (deadlocks, race conditions) are rare (<1% of commits). To prevent the model from ignoring them due to class imbalance, I generated high-fidelity synthetic training examples for C and Rust. This "Booster Pack" ensured the model could recognize complex threading violations despite their scarcity in the wild.
-
+    Concurrency bugs are rare (<1% of commits). I generated synthetic examples to ensure the model could recognize deadlocks and race conditions despite their scarcity in raw logs.
 *   **Chain-of-Thought Prompting ("Mini-Lessons"):**
-    I enforced a strict JSON output schema that required a **"Mini-Lesson"**. Instead of jumping to a label, the model had to generate a 15-word educational explanation (e.g., *"This is a Use-After-Free because the pointer is accessed after `free()`..."*). This forced the model to "show its work," significantly reducing hallucinations on ambiguous commits.
-
-*   **Validation & Quality Control:**
-    *   **Human-in-the-Loop (HITL) Curation:** Instead of relying on unsupervised learning, I manually verified and labeled the "Gold Standard" training dataset. This ensured the model learned from high-quality, human-adjudicated examples before scaling to the full 180k commit dataset.
-    *   **Consistency Checks:** The unified model architecture (classifying both C and Rust with the same fine-tuned brain) ensures that the definition of "Complexity" and "Security" remains consistent across languages, eliminating observer bias.
+    The model was required to generate a 15-word "Mini-Lesson" explaining the bug before outputting a label. This "show your work" approach significantly reduced hallucinations on complex systems code.
+*   **Human-in-the-Loop (HITL) Curation:** 
+    I manually verified and labeled a "Gold Standard" training dataset (240+ commits) to ensure the model learned from human-adjudicated intent.
 
 ### C. Cloud FinOps & Optimization
-*   **Initial Architecture:** Online Inference (sending commits one-by-one).
-    *   *Result:* Too slow, hit API rate limits, projected cost >$500.
-*   **Optimized Architecture:** Migrated to **Vertex AI Batch Prediction**.
-    *   *Result:* Processed 182k commits for **$64**.
-    *   *Impact:* **92% Cost Reduction** and 36x throughput increase.
+*   **Architecture:** Migrated from online inference to Vertex AI Batch Prediction.
+*   **Result:** Processed the full dataset for **$64** (vs. a projected $500+).
+*   **Impact:** **92% Cost Reduction** and 36x throughput increase.
+
 ---
 
-## 4. Key Findings & Data
+## 4. Key Findings
 
-### Finding 1: The "Rust Dividend"
-*   **C Libraries:** Consistently allocate **10-20%** of maintenance effort to Memory Safety.
-*   **Rust Libraries:** Allocate **<2%** to Memory Safety.
-*   **The Trade-off:** The data shows a near-perfect correlation: The time Rust saves on memory bugs is reinvested directly into **Feature & Value Add**.
+### Finding 1: The "Memory Safety Gap"
+*   **The 3x Difference:** C libraries consistently allocate **~12%** of maintenance effort to Memory Safety, while Rust libraries allocate only **~4%**.
+*   **The Rust Dividend:** There is a near-perfect correlation: The effort saved by eliminating memory bugs in Rust is reinvested directly into **Feature & Value Add**.
 
-### Finding 2: The "Shift Left" (Commit Complexity Score)
-I developed a **Commit Complexity Score (CCS)**:
+![The Language Tax](docs/images/diverging_distribution_delta.png)
+*Figure 1: The "Language Tax" - Quantifying the trade-off between Memory Safety effort and Feature development.*
+
+### Finding 2: The "Shift Left" Effect
+I developed a **Commit Complexity Score (CCS)** to quantify effort:
 $$ CCS = (0.5 \cdot CogLoad) + (0.25 \cdot \log(Entropy)) + (0.25 \cdot \log(Churn)) $$
 
-*   **Result:** Rust commits have a higher average CCS than C commits.
-*   **Interpretation:** Rust forces developers to handle complexity *upfront* (satisfying the compiler). C allows "simple" (but incorrect) code to merge, pushing the cost to the debugging phase.
+*   **Interpretation:** Rust forces developers to resolve complexity upfront. C allows "simple" code to merge, but pays a massive "backend tax" in the maintenance phase.
+
+![Complexity Violin Plots](docs/images/ccs_by_language.png)
+*Figure 2: Distribution of Commit Complexity Scores (CCS) showing the Shift-Left effect in Rust.*
 
 ---
 
-## 5. Repository Structure
+## 5. Acknowledgements & Consultations
+*   **Domain Expertise:** Consulted with the Executive Director of the Internet Security Research Group (ISRG) on a monthly basis to refine project direction.
+
+---
+
+## 6. Repository Structure
 
 ```bash
-├── etl_pipeline/
-│   ├── 01_extractor.py       # GitPython extractor & "Accordion" truncation
-│   ├── 02_batch_prep.py      # JSONL formatting for Vertex AI
-│   └── 03_uploader.py        # Cloud Storage interface
-├── analysis/
-│   ├── taxonomy_finetune.py  # Prompt engineering & HITL validation
-│   └── visualization.R       # R code for Violin Plots & Bar Charts
-├── docs/
-│   └── Research_Report.pdf   # Full findings
+maintenance-burden-analysis/
+├── etl_pipeline/              # Data Extraction & Preparation
+│   ├── extract_commits.py     # GitPython extractor & "Accordion" truncation
+│   ├── prepare_jsonl.py       # JSONL formatting for Vertex AI & synthetic data
+│   └── upload_to_gcs.py       # Cloud Storage interface
+├── training/                  # Model Fine-Tuning
+│   ├── config.py              # Prompt configuration & model settings
+│   ├── train_model.py         # Gemini model fine-tuning
+│   ├── merge_datasets.py      # Merge gold standard & labeled data
+│   └── add_synthetic_ids.py   # Generate synthetic training examples
+├── analysis/                  # Evaluation & Visualization
+│   ├── evaluate_model.py      # Model performance metrics
+│   ├── generate_visuals.py    # Violin plots, bar charts, distributions
+│   └── label_summary.py       # Taxonomy summary & validation
+├── data/                      # Data Artifacts
+│   ├── gold_standard/         # GOLD_VS_MODEL_COMPARISON.csv (HITL labeled data)
+│   ├── results/               # Output CSVs (Complexity Scores, predictions)
+│   └── samples/               # Sample datasets
+├── docs/                      # Documentation
+│   ├── images/                # PNG visualizations (8 charts)
+│   └── Final_Report.pdf       # Full research report
+├── .gitignore
+├── requirements.txt
 └── README.md
 ```
 
-## 6. Impact
-This research provides quantitative evidence supporting the strategic migration of critical infrastructure to memory-safe languages. It moves the debate from "Rust feels safer" to "Rust statistically eliminates the most expensive category of maintenance."
+---
+
