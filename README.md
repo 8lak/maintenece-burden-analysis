@@ -92,8 +92,8 @@ $$CCS = (0.5 \cdot CogLoad) + (0.25 \cdot \log(Entropy)) + (0.25 \cdot \log(Chur
 | `commit_id` | Unique SHA-1 identifier for the commit. | String |
 | `repo` | Name of the open-source library. | Categorical |
 | `category` | The inferred intent (e.g., "Memory Safety", "Feature"). | Categorical |
-|`is_security` |Is commit a security issue. | Boolean| 
-|`is_feature` | Is commit a feature. | Boolean|
+|`is_security` |Is commit a security issue. | Boolean | 
+|`is_feature` | Is commit a feature. | Boolean |
 | `complexity` | LLM-assessed cognitive load (1-5). | Integer |
 | `reasoning` | Chain-of-thought mini-lessons.| Text |
 | `entropy` | Number of files modified in the commit. | Integer |
